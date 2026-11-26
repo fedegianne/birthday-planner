@@ -1,3 +1,24 @@
-const db = new Promise((resolve,reject)=>{const r=indexedDB.open('birthday-planner',1);r.onupgradeneeded=()=>r.result.createObjectStore('state');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)});
-export async function load(){const d=await db;return new Promise((resolve,reject)=>{const r=d.transaction('state').objectStore('state').get('data');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})}
-export async function save(data){const d=await db;return new Promise((resolve,reject)=>{const t=d.transaction('state','readwrite');t.objectStore('state').put(data,'data');t.oncomplete=resolve;t.onerror=()=>reject(t.error);t.onabort=()=>reject(t.error)})}
+const db = new Promise((resolve, reject) => {
+  const r = indexedDB.open("birthday-planner", 1);
+  r.onupgradeneeded = () => r.result.createObjectStore("state");
+  r.onsuccess = () => resolve(r.result);
+  r.onerror = () => reject(r.error);
+});
+export async function load() {
+  const d = await db;
+  return new Promise((resolve, reject) => {
+    const r = d.transaction("state").objectStore("state").get("data");
+    r.onsuccess = () => resolve(r.result);
+    r.onerror = () => reject(r.error);
+  });
+}
+export async function save(data) {
+  const d = await db;
+  return new Promise((resolve, reject) => {
+    const t = d.transaction("state", "readwrite");
+    t.objectStore("state").put(data, "data");
+    t.oncomplete = resolve;
+    t.onerror = () => reject(t.error);
+    t.onabort = () => reject(t.error);
+  });
+}
