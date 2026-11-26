@@ -22,6 +22,8 @@ const defaults = () => ({
     gifts: true,
     theme: "auto",
     upcoming: "30",
+    upcomingParties: "30",
+    upcomingFestivities: "30",
   },
 });
 let state,
@@ -95,20 +97,29 @@ const rows = (arr) =>
         .map((e) => (e.f ? festEntry(e.f) : entry(e.p, e.d, e.type, e.year)))
         .join("")
     : '<p class="empty">No events.</p>';
-const upcomingOptions = {
-  30: "Next 30 days",
-  60: "Next 60 days",
-  90: "Next 90 days",
-  10: "Next 10 birthdays",
-  all: "All upcoming birthdays",
-};
-function upcomingList(arr) {
-  const v = state.settings.upcoming;
-  return v === "all"
-    ? arr
-    : v === "10"
-      ? arr.slice(0, 10)
-      : arr.filter((e) => diff(e.d, now) <= Number(v || 30));
+const upcomingSections = [
+  ["upcoming", "birthdays"],
+  ["upcomingParties", "parties"],
+  ["upcomingFestivities", "festivities"],
+];
+const upcomingValues = ["5", "10", "30"];
+
+function upcomingOptions(name) {
+  return [
+    ["5", `Next 5 ${name}`],
+    ["10", `Next 10 ${name}`],
+    ["30", "Next 30 days"],
+  ];
+}
+
+function upcomingList(arr, setting = "upcoming") {
+  const v = state.settings[setting];
+  const upcoming = arr
+    .filter((e) => diff(e.d, now) >= 0)
+    .sort((a, b) => a.d - b.d);
+
+  if (v === "5" || v === "10") return upcoming.slice(0, Number(v));
+  return upcoming.filter((e) => diff(e.d, now) <= 30);
 }
 const festProgress = (f) =>
   `${f.recipients.filter((r) => r.bought || r.wrapped).length}/${f.recipients.length} gifts purchased`;
@@ -259,6 +270,29 @@ function home() {
       });
   }
   alerts.sort((a, b) => a.n - b.n);
+  const upcomingParties = [];
+  for (const p of state.people) {
+    for (const [year, g] of Object.entries(p.plans || {})) {
+      if (!g.party) continue;
+
+      const d = parseDay(g.party);
+
+      if (diff(d, now) >= 0) {
+        upcomingParties.push({
+          p,
+          d,
+          type: "party",
+          year: Number(year),
+        });
+      }
+    }
+  }
+
+  const visibleParties = upcomingList(upcomingParties, "upcomingParties");
+  const visibleFestivities = upcomingList(
+    state.festivities.map((f) => ({ f, d: parseDay(f.date) })),
+    "upcomingFestivities",
+  );
   return (
     title(
       "Birthdays",
@@ -283,8 +317,12 @@ function home() {
       : '<p class="muted">Nothing due in your reminder window.</p>') +
     `<h2>Upcoming birthdays</h2>` +
     rows(upcomingList(upcoming)) +
-    `<h2>Upcoming festivities</h2>` +
-    festRows(state.festivities.filter((f) => diff(parseDay(f.date), now) >= 0))
+    (visibleParties.length
+      ? `<h2>Upcoming parties</h2>` + rows(visibleParties)
+      : "") +
+    (visibleFestivities.length
+      ? `<h2>Upcoming festivities</h2>` + rows(visibleFestivities)
+      : "")
   );
 }
 function calendar() {
@@ -360,19 +398,26 @@ function settings() {
     </div>
 
     <div class="card">
-      <label for="upcoming">Upcoming birthdays</label>
+      <h2>Upcoming events</h2>
 
-      <select id="upcoming">
-        ${Object.entries(upcomingOptions)
-          .map(
-            ([v, l]) => `
-              <option value="${v}" ${s.upcoming === v ? "selected" : ""}>
-                ${l}
-              </option>
-            `,
-          )
-          .join("")}
-      </select>
+      ${upcomingSections
+        .map(
+          ([id, name]) => `
+            <label for="${id}">Upcoming ${name}</label>
+            <select id="${id}">
+              ${upcomingOptions(name)
+                .map(
+                  ([v, l]) => `
+                    <option value="${v}" ${s[id] === v ? "selected" : ""}>
+                      ${l}
+                    </option>
+                  `,
+                )
+                .join("")}
+            </select>
+          `,
+        )
+        .join("")}
     </div>
 
     <div class="card">
@@ -587,11 +632,15 @@ function validate(raw) {
       throw Error("Invalid festivity");
     festIds.add(f.id);
   }
+  const settings = { ...defaults().settings, ...raw.settings };
+  for (const [id] of upcomingSections) {
+    if (!upcomingValues.includes(settings[id])) settings[id] = "30";
+  }
   return {
     ...defaults(),
     people: raw.people,
     festivities,
-    settings: { ...defaults().settings, ...raw.settings },
+    settings,
   };
 }
 document.addEventListener("click", async (e) => {
@@ -667,8 +716,9 @@ document.addEventListener("change", async (e) => {
   if (t.dataset.setting) {
     state.settings[t.dataset.setting] = t.checked;
     await persist();
-  } else if (t.id === "upcoming") {
-    state.settings.upcoming = t.value;
+  } else if (upcomingSections.some(([id]) => id === t.id)) {
+    if (!upcomingValues.includes(t.value)) return;
+    state.settings[t.id] = t.value;
     await persist();
     render();
   } else if (t.id === "theme") {
