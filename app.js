@@ -281,8 +281,6 @@ function home() {
           )
           .join("")
       : '<p class="muted">Nothing due in your reminder window.</p>') +
-    `<h2>This month · ${fmt(now, { month: "long" })}</h2>` +
-    rows(events(now.getFullYear(), now.getMonth())) +
     `<h2>Upcoming birthdays</h2>` +
     rows(upcomingList(upcoming)) +
     `<h2>Upcoming festivities</h2>` +
