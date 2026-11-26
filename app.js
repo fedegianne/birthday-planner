@@ -748,8 +748,12 @@ try {
   setInterval(() => {
     if (!modal.open && dayKey(now) !== dayKey(new Date())) render();
   }, 30000);
-  if ("serviceWorker" in navigator)
-    navigator.serviceWorker.register("./sw.js").catch(console.warn);
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker
+      .register("./sw.js", { updateViaCache: "none" })
+      .then((registration) => registration.update())
+      .catch(console.warn);
+  }
 } catch (e) {
   app.textContent = "Unable to open local database: " + e.message;
 }

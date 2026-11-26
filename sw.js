@@ -1,4 +1,5 @@
-const CACHE = "birthday-planner-v8.1";
+const CACHE = "birthday-planner-v8.2";
+
 const FILES = [
   "./",
   "./index.html",
@@ -10,22 +11,40 @@ const FILES = [
   "./icons/icon-192.png",
   "./icons/icon-512.png",
 ];
-self.addEventListener("install", (e) =>
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES))),
-);
-self.addEventListener("activate", (e) =>
+
+// Install the new version using fresh files.
+self.addEventListener("install", (e) => {
   e.waitUntil(
-    caches
-      .keys()
-      .then((keys) =>
-        Promise.all(
-          keys
-            .filter((k) => k.startsWith("birthday-planner-") && k !== CACHE)
-            .map((k) => caches.delete(k)),
-        ),
-      ),
-  ),
-);
+    (async () => {
+      const cache = await caches.open(CACHE);
+
+      await cache.addAll(
+        FILES.map((file) => new Request(file, { cache: "reload" })),
+      );
+
+      await self.skipWaiting();
+    })(),
+  );
+});
+
+// Remove outdated caches and activate the new version.
+self.addEventListener("activate", (e) => {
+  e.waitUntil(
+    (async () => {
+      const keys = await caches.keys();
+
+      await Promise.all(
+        keys
+          .filter((k) => k.startsWith("birthday-planner-") && k !== CACHE)
+          .map((k) => caches.delete(k)),
+      );
+
+      await self.clients.claim();
+    })(),
+  );
+});
+
+// Serve the current cached version and preserve offline access.
 self.addEventListener("fetch", (e) => {
   if (
     e.request.method !== "GET" ||
@@ -33,17 +52,23 @@ self.addEventListener("fetch", (e) => {
     !e.request.url.startsWith(self.registration.scope)
   )
     return;
+
   e.respondWith(
-    caches
-      .match(e.request)
-      .then(
-        (c) =>
-          c ||
-          fetch(e.request).catch(() =>
-            e.request.mode === "navigate"
-              ? caches.match("./index.html")
-              : Response.error(),
-          ),
-      ),
+    (async () => {
+      const cache = await caches.open(CACHE);
+      const cached = await cache.match(e.request);
+
+      if (cached) return cached;
+
+      try {
+        return await fetch(e.request);
+      } catch {
+        if (e.request.mode === "navigate") {
+          return (await cache.match("./index.html")) || Response.error();
+        }
+
+        return Response.error();
+      }
+    })(),
   );
 });
