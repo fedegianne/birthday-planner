@@ -1,4 +1,4 @@
-const CACHE = "birthday-planner-v5";
+const CACHE = "birthday-planner-v6";
 const FILES = [
   "./",
   "./index.html",

@@ -332,29 +332,122 @@ function peopleRows() {
 }
 function settings() {
   const s = state.settings;
-  return `<h1>Settings</h1><div class="card"><h2>Reminders</h2>${[
-    ["week", "Within one week"],
-    ["day", "One day before"],
-    ["today", "On the birthday"],
-    ["party", "Upcoming parties (within 7 days)"],
-    ["gifts", "Show gift status in reminders"],
-  ]
-    .map(
-      ([k, l]) =>
-        `<label class="check"><input type="checkbox" data-setting="${k}" ${s[k] ? "checked" : ""}>${l}</label>`,
-    )
-    .join(
-      "",
-    )}<small>Reminders appear inside the app only.</small></div><div class="card"><label for="upcoming">Upcoming birthdays</label><select id="upcoming">${Object.entries(
-    upcomingOptions,
-  )
-    .map(
-      ([v, l]) =>
-        `<option value="${v}" ${s.upcoming === v ? "selected" : ""}>${l}</option>`,
-    )
-    .join(
-      "",
-    )}</select></div><div class="card"><label for="theme">Appearance</label><select id="theme">${["auto", "light", "dark"].map((t) => `<option ${t === s.theme ? "selected" : ""}>${t}</option>`).join("")}</select></div><div class="card"><h2>Data and backups</h2><p>Your records are stored on this device. Export backups regularly, especially before clearing browser data or changing phones.</p><div class="actions"><button data-export>Export JSON</button><button data-import>Restore JSON</button></div><input hidden type="file" id="import" accept=".json,application/json"><p><small>Restoring replaces all existing records.</small></p></div><div class="card"><small>Birthday Planner · v2.0 · No accounts or tracking. Leap-day birthdays are observed on 28 February in non-leap years.</small></div>`;
+
+  return `
+    <h1>Settings</h1>
+
+    <div class="card">
+      <h2>Reminders</h2>
+
+      ${[
+        ["week", "Within one week"],
+        ["day", "One day before"],
+        ["today", "On the birthday"],
+        ["party", "Upcoming parties (within 7 days)"],
+        ["gifts", "Show gift status in reminders"],
+      ]
+        .map(
+          ([k, l]) => `
+            <label class="check">
+              <input type="checkbox"
+                     data-setting="${k}"
+                     ${s[k] ? "checked" : ""}>
+              ${l}
+            </label>
+          `,
+        )
+        .join("")}
+
+      <small>Reminders appear inside the app only.</small>
+    </div>
+
+    <div class="card">
+      <label for="upcoming">Upcoming birthdays</label>
+
+      <select id="upcoming">
+        ${Object.entries(upcomingOptions)
+          .map(
+            ([v, l]) => `
+              <option value="${v}" ${s.upcoming === v ? "selected" : ""}>
+                ${l}
+              </option>
+            `,
+          )
+          .join("")}
+      </select>
+    </div>
+
+    <div class="card">
+      <label for="theme">Appearance</label>
+
+      <select id="theme">
+        ${["auto", "light", "dark"]
+          .map(
+            (t) => `
+              <option ${t === s.theme ? "selected" : ""}>${t}</option>
+            `,
+          )
+          .join("")}
+      </select>
+    </div>
+
+    <div class="card">
+      <h2>Data and backups</h2>
+
+      <p>
+        Your records are stored on this device. Export backups
+        regularly, especially before clearing browser data,
+        removing the app or changing phones.
+      </p>
+
+      <div class="actions">
+        <button data-export>Export JSON</button>
+        <button data-import>Restore JSON</button>
+      </div>
+
+      <input hidden type="file" id="import" accept=".json,application/json">
+
+      <p>
+        <small>Restoring replaces all existing records.</small>
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>About Birthday Planner</h2>
+
+      <p class="muted">Version 2.1 · Offline-first PWA</p>
+
+      <p class="muted">
+        Free, with no accounts, ads or cloud synchronization.
+      </p>
+
+      <p class="muted">
+        Leap-day birthdays are observed on 28 February
+        in non-leap years.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Privacy &amp; Analytics</h2>
+
+      <p class="muted">
+        Your personal records are stored locally on your
+        device and are not uploaded to a server.
+      </p>
+
+      <p class="muted">
+        Cloudflare Web Analytics collects aggregate usage
+        statistics without accessing your saved records
+        or using tracking cookies.
+      </p>
+
+      <a href="https://www.cloudflare.com/privacypolicy/"
+         target="_blank"
+         rel="noopener noreferrer">
+        Cloudflare Privacy Policy
+      </a>
+    </div>
+  `;
 }
 function render() {
   now = new Date();
