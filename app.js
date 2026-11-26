@@ -312,7 +312,7 @@ function calendar() {
       },
     ).join(
       "",
-    )}</div><p><small>● Birthday &nbsp; <span style="color:#d58b32">● Party</span> &nbsp; <span style="color:#399b78">● Festivity</span></small></p><button data-today>Go to today</button> <button data-all>Whole month</button></div><h2>${selected ? fmt(new Date(y, m, selected)) : "Events this month"}</h2>` +
+    )}</div><p><small>● Birthday &nbsp; <span style="color:#d58b32">● Party</span> &nbsp; <span style="color:#548bd0">● Festivity</span></small></p><button data-today>Go to today</button> <button data-all>Whole month</button></div><h2>${selected ? fmt(new Date(y, m, selected)) : "Events this month"}</h2>` +
     rows(ev.filter((e) => !selected || e.d.getDate() === selected))
   );
 }
