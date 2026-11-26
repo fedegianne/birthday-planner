@@ -160,7 +160,7 @@ function editFest(f) {
   const add = (r) => {
     const el = document.createElement("div");
     el.className = "card recipient";
-    el.innerHTML = `<label>Name<input name="recipientName" list="festPeople" required value="${esc(r.name)}"></label><label>Gift idea / description<textarea name="recipientGift">${esc(r.gift)}</textarea></label><label class="check"><input type="checkbox" name="recipientBought" ${r.bought ? "checked" : ""}>Gift purchased</label><label class="check"><input type="checkbox" name="recipientWrapped" ${r.wrapped ? "checked" : ""}>Gift wrapped</label><label>Gift cost (€)<input name="recipientCost" type="number" min="0" step="0.01" value="${esc(r.cost)}"></label><button type="button" class="danger removeRecipient">Remove person</button>`;
+    el.innerHTML = `<label>Name<input name="recipientName" list="festPeople" required value="${esc(r.name)}"></label><label>Gift idea / description<textarea name="recipientGift">${esc(r.gift)}</textarea></label><label class="check"><input type="checkbox" name="recipientBought" ${r.bought ? "checked" : ""}>Gift purchased</label><label class="check"><input type="checkbox" name="recipientWrapped" ${r.wrapped ? "checked" : ""}>Gift wrapped</label><button type="button" class="danger removeRecipient">Remove person</button>`;
     el.querySelector(".removeRecipient").onclick = () => el.remove();
     $("#recipients").append(el);
   };
@@ -184,7 +184,6 @@ function editFest(f) {
         bought:
           get("recipientBought").checked || get("recipientWrapped").checked,
         wrapped: get("recipientWrapped").checked,
-        cost: get("recipientCost").value,
       };
     });
     if (recipients.some((r) => !r.name)) {
@@ -553,7 +552,7 @@ function editPerson(p) {
 function personDetail(p, y) {
   const g = plan(p, y),
     d = birthday(p, y);
-  modal.innerHTML = `<div class="row between"><h1 class="grow">${esc(p.name)}</h1><button data-close aria-label="Close">✕</button></div><p>${fmt(d)} ${p.year ? "· " + p.year : ""} · ${esc(age(p, y))}</p><p class="muted">${esc(p.relationship)} ${esc(p.notes)}</p><button data-edit="${esc(p.id)}">Edit person</button><hr><div class="row between"><button data-person="${esc(p.id)}" data-year="${y - 1}" aria-label="Previous year">‹</button><b>Birthday ${y}</b><button data-person="${esc(p.id)}" data-year="${y + 1}" aria-label="Next year">›</button></div><p class="pill" style="display:inline-block">${countdown(diff(d, now))}</p><form id="planForm"><label>Gift idea / description<textarea name="gift">${esc(g.gift)}</textarea></label><label class="check"><input type="checkbox" name="bought" ${g.bought ? "checked" : ""}>Gift purchased</label><label class="check"><input type="checkbox" name="wrapped" ${g.wrapped ? "checked" : ""}>Gift wrapped</label><label>Gift cost (€)<input type="number" name="cost" min="0" step="0.01" value="${esc(g.cost ?? "")}"></label><h2>Party</h2><label>Date<input type="date" name="party" value="${esc(g.party)}"></label><label>Time<input type="time" name="time" value="${esc(g.time)}"></label><label>Location<input name="location" value="${esc(g.location)}"></label><label>Notes for this year<textarea name="notes">${esc(g.notes)}</textarea></label><div class="actions"><button class="primary">Save details</button></div></form><hr><h2>Gift history</h2>${
+  modal.innerHTML = `<div class="row between"><h1 class="grow">${esc(p.name)}</h1><button data-close aria-label="Close">✕</button></div><p>${fmt(d)} ${p.year ? "· " + p.year : ""} · ${esc(age(p, y))}</p><p class="muted">${esc(p.relationship)} ${esc(p.notes)}</p><button data-edit="${esc(p.id)}">Edit person</button><hr><div class="row between"><button data-person="${esc(p.id)}" data-year="${y - 1}" aria-label="Previous year">‹</button><b>Birthday ${y}</b><button data-person="${esc(p.id)}" data-year="${y + 1}" aria-label="Next year">›</button></div><p class="pill" style="display:inline-block">${countdown(diff(d, now))}</p><form id="planForm"><label>Gift idea / description<textarea name="gift">${esc(g.gift)}</textarea></label><label class="check"><input type="checkbox" name="bought" ${g.bought ? "checked" : ""}>Gift purchased</label><label class="check"><input type="checkbox" name="wrapped" ${g.wrapped ? "checked" : ""}>Gift wrapped</label><h2>Party</h2><label>Date<input type="date" name="party" value="${esc(g.party)}"></label><label>Time<input type="time" name="time" value="${esc(g.time)}"></label><label>Location<input name="location" value="${esc(g.location)}"></label><label>Notes for this year<textarea name="notes">${esc(g.notes)}</textarea></label><div class="actions"><button class="primary">Save details</button></div></form><hr><h2>Gift history</h2>${
     Object.entries(p.plans || {})
       .filter(([yr, v]) => Number(yr) !== y && (v.gift || v.bought))
       .sort((a, b) => b[0] - a[0])
@@ -578,6 +577,15 @@ function personDetail(p, y) {
     modal.close();
   };
 }
+function migrateGiftCost(record) {
+  if (!Object.prototype.hasOwnProperty.call(record, "cost")) return;
+  const cost = String(record.cost ?? "").trim();
+  if (cost) {
+    record.gift = [record.gift, `Price: €${cost}`].filter(Boolean).join("\n");
+  }
+  delete record.cost;
+}
+
 function validate(raw) {
   if (raw?.version !== 1 || !Array.isArray(raw.people))
     throw Error("Unsupported backup format");
@@ -631,6 +639,12 @@ function validate(raw) {
     )
       throw Error("Invalid festivity");
     festIds.add(f.id);
+  }
+  for (const p of raw.people) {
+    for (const g of Object.values(p.plans || {})) migrateGiftCost(g);
+  }
+  for (const f of festivities) {
+    for (const r of f.recipients) migrateGiftCost(r);
   }
   const settings = { ...defaults().settings, ...raw.settings };
   for (const [id] of upcomingSections) {
