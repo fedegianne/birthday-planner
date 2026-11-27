@@ -1,6 +1,6 @@
 # Birthday Planner
 
-Version 2.2.0 · Offline-first PWA.
+Version 2.2.1 · Offline-first PWA.
 
 
 **Birthday Planner** is a personal birthday, gift and celebration planner designed to help you keep track of important dates and organize gifts throughout the year.

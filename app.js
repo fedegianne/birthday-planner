@@ -34,12 +34,15 @@ let state,
   selected = null,
   search = "";
 const backups = createBackupTools({
-  slug: "birthday-planner", name: "Birthday Planner", version: "2.2.0",
+  slug: "birthday-planner",
+  name: "Birthday Planner",
+  version: "2.2.1",
   records: () => ({ people: state.people, festivities: state.festivities }),
   hasRecords: () => Boolean(state.people.length || state.festivities.length),
   snapshot: () => state,
   exportNormal: () => exportNormalJSON(),
-  restore: () => $("#import").click(), refresh: () => render(),
+  restore: () => $("#import").click(),
+  refresh: () => render(),
 });
 const esc = (v) =>
   String(v ?? "").replace(
@@ -380,59 +383,72 @@ function settings() {
   return `
     <h1>Settings</h1>
 
-    <div class="card">
-      <h2>Reminders</h2>
+    <details class="card settings-disclosure" data-settings-section="reminders">
+      <summary><h2>Reminders</h2></summary>
+      <div class="settings-disclosure-body">
 
-      ${[
-        ["week", "Within one week"],
-        ["day", "One day before"],
-        ["today", "On the birthday"],
-        ["party", "Upcoming parties (within 7 days)"],
-        ["gifts", "Show gift status in reminders"],
-      ]
-        .map(
-          ([k, l]) => `
-            <label class="check">
-              <input type="checkbox"
-                     data-setting="${k}"
-                     ${s[k] ? "checked" : ""}>
-              ${l}
-            </label>
-          `,
-        )
-        .join("")}
+        ${[
+          ["week", "Within one week"],
+          ["day", "One day before"],
+          ["today", "On the birthday"],
+          ["party", "Upcoming parties (within 7 days)"],
+          ["gifts", "Show gift status in reminders"],
+        ]
+          .map(
+            ([k, l]) => `
+              <label class="check">
+                <input type="checkbox"
+                       data-setting="${k}"
+                       ${s[k] ? "checked" : ""}>
+                ${l}
+              </label>
+            `,
+          )
+          .join("")}
 
-      <small>Reminders appear inside the app only.</small>
-      <p class="muted">Leap-day birthdays are observed on 28 February in non-leap years.</p>
-    </div>
+        <small>Reminders appear inside the app only.</small>
+        <p class="muted">Leap-day birthdays are observed on 28 February in non-leap years.</p>
+      </div>
+    </details>
 
-    <div class="card">
-      <h2>Upcoming events</h2>
+    <details class="card settings-disclosure" data-settings-section="upcoming">
+      <summary><h2>Upcoming events</h2></summary>
+      <div class="settings-disclosure-body">
 
-      ${upcomingSections
-        .map(
-          ([id, name]) => `
-            <label for="${id}">Upcoming ${name}</label>
-            <select id="${id}">
-              ${upcomingOptions(name)
-                .map(
-                  ([v, l]) => `
-                    <option value="${v}" ${s[id] === v ? "selected" : ""}>
-                      ${l}
-                    </option>
-                  `,
-                )
-                .join("")}
-            </select>
-          `,
-        )
-        .join("")}
-    </div>
+        ${upcomingSections
+          .map(
+            ([id, name]) => `
+              <label for="${id}">Upcoming ${name}</label>
+              <select id="${id}">
+                ${upcomingOptions(name)
+                  .map(
+                    ([v, l]) => `
+                      <option value="${v}" ${s[id] === v ? "selected" : ""}>
+                        ${l}
+                      </option>
+                    `,
+                  )
+                  .join("")}
+              </select>
+            `,
+          )
+          .join("")}
+      </div>
+    </details>
 
     <div class="common-settings-card">
       <h2>Appearance</h2>
       <select id="theme" aria-label="Appearance">
-        ${[["auto", "System"], ["light", "Light"], ["dark", "Dark"]].map(([v, label]) => `<option value="${v}" ${v === s.theme ? "selected" : ""}>${label}</option>`).join("")}
+        ${[
+          ["auto", "System"],
+          ["light", "Light"],
+          ["dark", "Dark"],
+        ]
+          .map(
+            ([v, label]) =>
+              `<option value="${v}" ${v === s.theme ? "selected" : ""}>${label}</option>`,
+          )
+          .join("")}
       </select>
     </div>
     <div id="common-settings" class="common-settings"></div>
@@ -440,11 +456,23 @@ function settings() {
   `;
 }
 function render() {
+  const expandedSettings = new Set(
+    [...app.querySelectorAll("details[data-settings-section][open]")].map(
+      (section) => section.dataset.settingsSection,
+    ),
+  );
   now = new Date();
   document.documentElement.dataset.theme = state.settings.theme;
   app.innerHTML = { home, calendar, people, festivities, settings }[page]();
   if (page === "home") backups.reminder(app);
-  if (page === "settings") backups.settings($("#common-settings"));
+  if (page === "settings") {
+    for (const section of app.querySelectorAll(
+      "details[data-settings-section]",
+    )) {
+      section.open = expandedSettings.has(section.dataset.settingsSection);
+    }
+    backups.settings($("#common-settings"));
+  }
   $("#nav").innerHTML = [
     ["home", "⌂", "Home"],
     ["calendar", "▦", "Calendar"],
@@ -608,7 +636,9 @@ function validate(raw) {
   };
 }
 function exportNormalJSON() {
-  const url = URL.createObjectURL(new Blob([JSON.stringify(state, null, 2)], { type: "application/json" }));
+  const url = URL.createObjectURL(
+    new Blob([JSON.stringify(state, null, 2)], { type: "application/json" }),
+  );
   const a = document.createElement("a");
   a.href = url;
   a.download = `birthday-planner-${dayKey(new Date())}.json`;
