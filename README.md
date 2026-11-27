@@ -1,5 +1,8 @@
 # Birthday Planner
 
+Version 2.2.0 · Offline-first PWA.
+
+
 **Birthday Planner** is a personal birthday, gift and celebration planner designed to help you keep track of important dates and organize gifts throughout the year.
 
 Save birthdays that automatically repeat every year, check upcoming celebrations, plan gifts, organize birthday parties and create custom festivities involving multiple people.
@@ -156,3 +159,9 @@ Open `http://localhost:8000` in your browser.
 The app is hosted using GitHub Pages. Changes pushed to the main branch are automatically deployed.
 
 Increment the service worker cache version in `sw.js` when releasing functional or visual updates.
+
+## Emergency backup reminder
+
+Settings → Data and backups offers a device-local reminder every day, every 7 days (default), every 30 days, or Never. The first reminder is due when records exist and no emergency export has been requested. Later reminders require both changed records and the selected interval to have elapsed. Later dismisses the reminder for the current launch/day. The app requests persistent browser storage where supported.
+
+The emergency export creates `birthday-planner-emergency.json` in the existing JSON backup format. Save it outside the app, preferably in Files or iCloud Drive, and replace the previous emergency file if prompted. The app cannot silently overwrite external files or verify that a download was saved. The displayed timestamp records the export request, not confirmation of a completed save. Normal dated exports are unchanged. Empty emergency exports are disabled; both backup types can be restored through Restore JSON. Reminder preferences and export fingerprints are stored separately on this device, not inside the exported records. Persistent storage is best effort, not a replacement for an external backup.

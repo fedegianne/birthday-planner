@@ -1,3 +1,4 @@
+import { createBackupTools } from "./backup.js";
 import { load, save } from "./db.js";
 import {
   dayKey,
@@ -32,6 +33,14 @@ let state,
   month = new Date(now.getFullYear(), now.getMonth(), 1),
   selected = null,
   search = "";
+const backups = createBackupTools({
+  slug: "birthday-planner", name: "Birthday Planner", version: "2.2.0",
+  records: () => ({ people: state.people, festivities: state.festivities }),
+  hasRecords: () => Boolean(state.people.length || state.festivities.length),
+  snapshot: () => state,
+  exportNormal: () => exportNormalJSON(),
+  restore: () => $("#import").click(), refresh: () => render(),
+});
 const esc = (v) =>
   String(v ?? "").replace(
     /[&<>"']/g,
@@ -394,6 +403,7 @@ function settings() {
         .join("")}
 
       <small>Reminders appear inside the app only.</small>
+      <p class="muted">Leap-day birthdays are observed on 28 February in non-leap years.</p>
     </div>
 
     <div class="card">
@@ -419,82 +429,22 @@ function settings() {
         .join("")}
     </div>
 
-    <div class="card">
-      <label for="theme">Appearance</label>
-
-      <select id="theme">
-        ${["auto", "light", "dark"]
-          .map(
-            (t) => `
-              <option ${t === s.theme ? "selected" : ""}>${t}</option>
-            `,
-          )
-          .join("")}
+    <div class="common-settings-card">
+      <h2>Appearance</h2>
+      <select id="theme" aria-label="Appearance">
+        ${[["auto", "System"], ["light", "Light"], ["dark", "Dark"]].map(([v, label]) => `<option value="${v}" ${v === s.theme ? "selected" : ""}>${label}</option>`).join("")}
       </select>
     </div>
-
-    <div class="card">
-      <h2>Data and backups</h2>
-
-      <p>
-        Your records are stored on this device. Export backups
-        regularly, especially before clearing browser data,
-        removing the app or changing phones.
-      </p>
-
-      <div class="actions">
-        <button data-export>Export JSON</button>
-        <button data-import>Restore JSON</button>
-      </div>
-
-      <input hidden type="file" id="import" accept=".json,application/json">
-
-      <p>
-        <small>Restoring replaces all existing records.</small>
-      </p>
-    </div>
-
-    <div class="card">
-      <h2>About Birthday Planner</h2>
-
-      <p class="muted">Version 2.1 · Offline-first PWA</p>
-
-      <p class="muted">
-        Free, with no accounts, ads or cloud synchronization.
-      </p>
-
-      <p class="muted">
-        Leap-day birthdays are observed on 28 February
-        in non-leap years.
-      </p>
-    </div>
-
-    <div class="card">
-      <h2>Privacy &amp; Analytics</h2>
-
-      <p class="muted">
-        Your personal records are stored locally on your
-        device and are not uploaded to a server.
-      </p>
-
-      <p class="muted">
-        Cloudflare Web Analytics collects aggregate usage
-        statistics without accessing your saved records
-        or using tracking cookies.
-      </p>
-
-      <a href="https://www.cloudflare.com/privacypolicy/"
-         target="_blank"
-         rel="noopener noreferrer">
-        Cloudflare Privacy Policy
-      </a>
-    </div>
+    <div id="common-settings" class="common-settings"></div>
+    <input hidden type="file" id="import" accept=".json,application/json">
   `;
 }
 function render() {
   now = new Date();
   document.documentElement.dataset.theme = state.settings.theme;
   app.innerHTML = { home, calendar, people, festivities, settings }[page]();
+  if (page === "home") backups.reminder(app);
+  if (page === "settings") backups.settings($("#common-settings"));
   $("#nav").innerHTML = [
     ["home", "⌂", "Home"],
     ["calendar", "▦", "Calendar"],
@@ -657,6 +607,16 @@ function validate(raw) {
     settings,
   };
 }
+function exportNormalJSON() {
+  const url = URL.createObjectURL(new Blob([JSON.stringify(state, null, 2)], { type: "application/json" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `birthday-planner-${dayKey(new Date())}.json`;
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
+}
 document.addEventListener("click", async (e) => {
   const b = e.target.closest("button");
   if (!b) return;
@@ -709,14 +669,7 @@ document.addEventListener("click", async (e) => {
     selected = null;
     render();
   } else if ("export" in d) {
-    const url = URL.createObjectURL(
-      new Blob([JSON.stringify(state, null, 2)], { type: "application/json" }),
-    );
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `birthday-planner-${dayKey(now)}.json`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    exportNormalJSON();
   } else if ("import" in d) $("#import").click();
 });
 document.addEventListener("input", (e) => {
@@ -755,6 +708,7 @@ document.addEventListener("change", async (e) => {
 });
 try {
   state = validate((await load()) || defaults());
+  void backups.requestPersistence();
   render();
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden && !modal.open) render();

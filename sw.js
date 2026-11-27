@@ -1,9 +1,10 @@
-const CACHE = "birthday-planner-v8.3";
+const CACHE = "birthday-planner-v8.4";
 
 const FILES = [
   "./",
   "./index.html",
   "./styles.css",
+  "./backup.js",
   "./app.js",
   "./db.js",
   "./dates.js",
