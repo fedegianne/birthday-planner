@@ -36,7 +36,7 @@ let state,
 const backups = createBackupTools({
   slug: "birthday-planner",
   name: "Birthday Planner",
-  version: "2.2.1",
+  version: "2.2.2",
   records: () => ({ people: state.people, festivities: state.festivities }),
   hasRecords: () => Boolean(state.people.length || state.festivities.length),
   snapshot: () => state,

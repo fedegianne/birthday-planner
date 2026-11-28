@@ -1,13 +1,13 @@
 :root {
   color-scheme: light dark;
-  --bg: #f5f7f6;
+  --bg: #f3f6f2;
   --card: #fff;
-  --ink: #172522;
-  --muted: #65736e;
-  --line: #dce5e0;
-  --accent: #397c68;
-  --soft: #e6efeb;
-  --danger: #a33e3e;
+  --ink: #203328;
+  --muted: #64766b;
+  --line: #dce5dc;
+  --accent: #286743;
+  --soft: #e1efe3;
+  --danger: #b13d39;
 }
 * {
   box-sizing: border-box;
@@ -24,26 +24,26 @@ body {
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #131b19;
-    --card: #202b27;
-    --ink: #eef5f1;
-    --muted: #a9b9b1;
-    --line: #394941;
-    --accent: #91cbb5;
-    --soft: #2d4037;
-    --danger: #ffaaaa;
+    --bg: #121b16;
+    --card: #1c2921;
+    --ink: #e8f1e9;
+    --muted: #a6b9aa;
+    --line: #35463a;
+    --accent: #89c99c;
+    --soft: #263e2d;
+    --danger: #ff9890;
   }
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #131b19;
-  --card: #202b27;
-  --ink: #eef5f1;
-  --muted: #a9b9b1;
-  --line: #394941;
-  --accent: #91cbb5;
-  --soft: #2d4037;
-  --danger: #ffaaaa;
+  --bg: #121b16;
+  --card: #1c2921;
+  --ink: #e8f1e9;
+  --muted: #a6b9aa;
+  --line: #35463a;
+  --accent: #89c99c;
+  --soft: #263e2d;
+  --danger: #ff9890;
 }
 :root[data-theme="light"] {
   color-scheme: light;
@@ -87,7 +87,7 @@ button {
   font-weight: 600;
 }
 button.primary {
-  background: #397c68;
+  background: #286743;
   color: white;
 }
 button.danger {
@@ -105,13 +105,13 @@ input:focus-visible {
   margin: 9px 0;
 }
 .hero {
-  background: #397c68;
+  background: #286743;
   color: white;
   border: 0;
   padding: 22px;
 }
 .hero small {
-  color: #e6efeb;
+  color: #e1efe3;
 }
 .hero strong {
   display: block;
@@ -247,7 +247,7 @@ textarea {
   resize: vertical;
 }
 input[type="checkbox"] {
-  accent-color: #397c68;
+  accent-color: #286743;
   width: 20px;
   height: 20px;
   vertical-align: middle;
@@ -369,19 +369,19 @@ nav button {
   font-weight: 600;
 }
 .common-settings-card button.primary {
-  background: #397c68;
+  background: #286743;
   color: white;
-  border: 1px solid #397c68;
+  border: 1px solid #286743;
   border-radius: 11px;
   font-weight: 600;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .common-settings-card a {
-    color: #91cbb5;
+    color: #89c99c;
   }
 }
 :root[data-theme="dark"] .common-settings-card a {
-  color: #91cbb5;
+  color: #89c99c;
 }
 
 /* Shared application branding */
